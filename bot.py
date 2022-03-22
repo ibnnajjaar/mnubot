@@ -7,6 +7,6 @@ config.read(config_file)
 bot_token = config['pyrogram']['bot_token']
 
 Client(
-    "bank bot",
+    "emmenyou bot",
     bot_token=bot_token,
 ).run()
