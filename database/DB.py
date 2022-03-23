@@ -51,7 +51,7 @@ class DB:
         cursor = self.execute(query)
         return cursor.fetchall()
 
-    def get(self):
+    def db_get(self):
         return self.cursor.fetchall()
 
     def fetch_one(self):

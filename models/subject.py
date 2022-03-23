@@ -19,6 +19,10 @@ class Subject(Model):
         subjects = self.table(self.table_name).fetch_all()
         return self.create_model_collection(subjects)
 
+    def get(self):
+        subjects = self.db_get()
+        return self.create_model_collection(subjects)
+
     def first(self):
         subject = self.table(self.table_name).fetch_one()
         return self.create_model(subject)
