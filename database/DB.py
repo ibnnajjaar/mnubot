@@ -2,6 +2,17 @@ from configparser import ConfigParser
 import sqlite3
 
 
+def prepare_update_array_from(data_array):
+    data_string = ""
+    for data_key in data_array:
+        new_data_string = data_key + " = " + "'" + data_array[data_key] + "'"
+        if data_string:
+            data_string = ", ".join([data_string, new_data_string])
+        else:
+            data_string = new_data_string
+    return data_string
+
+
 class DB:
 
     connection = None
@@ -28,14 +39,13 @@ class DB:
         self.db_table = table
         return self
 
-    def where(self, column, value):
+    def db_where(self, column, value):
         query = "SELECT * FROM %s WHERE %s = '%s'"
         query = query % (self.db_table, column, value)
-        print(query)
         self.cursor = self.execute(query)
         return self
 
-    def all(self):
+    def fetch_all(self):
         query = '''SELECT * FROM %s'''
         query = query % self.db_table
         cursor = self.execute(query)
@@ -44,7 +54,7 @@ class DB:
     def get(self):
         return self.cursor.fetchall()
 
-    def first(self):
+    def fetch_one(self):
         return self.cursor.fetchone()
 
     def create(self, data_array):
@@ -52,20 +62,22 @@ class DB:
         columns = ', '.join(data_array.keys())
         values = "', '".join(data_array.values())
         query = query % (self.db_table, columns, values)
-        print(query)
         self.execute(query)
         self.connection.commit()
         return
 
     def update(self, reference_column, reference_value, data_array):
-        update_array = self.prepare_update_array_from(data_array)
+        update_array = prepare_update_array_from(data_array)
+        print(update_array)
         query = '''
         UPDATE %s
         SET %s 
-        WHERE %s = %s 
+        WHERE %s = '%s' 
         '''
         query = query % (self.db_table, update_array, reference_column, reference_value)
-
-    def prepare_update_array_from(self, data_array):
+        print(query)
+        self.execute(query)
+        self.connection.commit()
+        return
 
 
