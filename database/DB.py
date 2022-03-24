@@ -19,7 +19,3 @@ class DB:
         self.cursor = self.connection.cursor()
         return self.connection
 
-    def execute(self, query, params = None):
-        self.cursor.execute(query)
-        return self.cursor
-

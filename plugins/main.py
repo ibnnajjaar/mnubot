@@ -6,14 +6,22 @@ from pyrogram import filters
 from pyrogram.types import Message
 
 from actions.create_subjects_prettytable import create_subjects_prettytable
+from database.migrations.subscribers import migrate_subscribers_table
 from models.period import Period
 from models.subject import Subject
 from prettytable import PrettyTable, ALL
 
+from models.subscriber import Subscriber
+
 
 @Client.on_message(filters.command('start'))
 def start_command(bot, message: Message):
-    message.reply("Hello")
+    Subscriber().register(message.from_user.id)
+    message.reply(f"Assalam Alaikum {message.from_user.first_name}!")
+    message.reply("To personalize the experience, you may subscribe to your own subjects "
+                  "and get notifications accordingly. I hope this bot will be useful to you.\n\n"
+                  "If you would like to request for a feature. Enter command /feedback and "
+                  "explain what you want in detail.")
 
 @Client.on_message(filters.command('subjects'))
 def list_subjects(bot, message: Message):
@@ -41,6 +49,11 @@ def list_today_timetable(bot, message: Message):
     periods = Period().today()
     period_table = format_periods(periods, today)
     message.reply_text(f"```{period_table.get_string()}```",parse_mode='markdown')
+
+@Client.on_message(filters.command('migrate'))
+def migrate_database(bot, message: Message):
+    migrate_subscribers_table()
+
 
 @Client.on_message(filters.text)
 def default_message(bot, message):
