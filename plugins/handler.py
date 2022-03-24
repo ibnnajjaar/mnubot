@@ -1,18 +1,13 @@
-from collections import defaultdict
 from datetime import date
-
 from pyrogram import Client
 from pyrogram import filters
-from pyrogram.types import Message
-
+from pyrogram.types import Message, InlineKeyboardMarkup, InlineKeyboardButton
 from actions.create_subjects_prettytable import create_subjects_prettytable
 from database.migrations.subscribers import migrate_subscribers_table
 from models.period import Period
 from models.subject import Subject
 from prettytable import PrettyTable, ALL
-
 from models.subscriber import Subscriber
-
 
 @Client.on_message(filters.command('start'))
 def start_command(bot, message: Message):
@@ -53,7 +48,6 @@ def list_today_timetable(bot, message: Message):
 @Client.on_message(filters.command('migrate'))
 def migrate_database(bot, message: Message):
     migrate_subscribers_table()
-
 
 @Client.on_message(filters.text)
 def default_message(bot, message):
