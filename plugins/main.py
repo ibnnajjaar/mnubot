@@ -5,6 +5,7 @@ from pyrogram import Client
 from pyrogram import filters
 from pyrogram.types import Message
 
+from actions.create_subjects_prettytable import create_subjects_prettytable
 from models.period import Period
 from models.subject import Subject
 from prettytable import PrettyTable, ALL
@@ -17,39 +18,27 @@ def start_command(bot, message: Message):
 @Client.on_message(filters.command('subjects'))
 def list_subjects(bot, message: Message):
     subjects = Subject().all()
-    subject_table = PrettyTable()
-    subject_table.hrules=ALL
-    subject_table.field_names = ["Subjects"]
-    for subject in subjects:
-        subject_table.add_row([
-            subject.name + "(" + subject.code + ")\n" +
-            "by: " + subject.lecturer
-        ])
-    subject_table.align["Subjects"] = "l"
-    message.reply_text("```" + subject_table.get_string() + "```",parse_mode='markdown')
+    subject_table = create_subjects_prettytable(subjects)
+    message.reply_text(f"```{subject_table.get_string()}```",parse_mode='markdown')
 
 @Client.on_message(filters.command('table'))
 def list_timetable(bot, message: Message):
     # Fetch all periods collection
-    all_periods = Period().all()
-    # Group all periods by day
-    sorted_periods = defaultdict(list)
-    for period in all_periods:
-        sorted_periods[period.weekday].append(period)
-
+    unsorted_periods = Period().all()
+    sorted_periods = Period().sort_by_weekday(unsorted_periods)
+    periods_output = ""
     # foreach group in grouped results
     for weekday in sorted_periods:
         periods = sorted_periods[weekday]
         period_table = format_periods(periods, weekday)
-        message.reply_text(f"```{period_table.get_string()}```",parse_mode='markdown')
+        periods_output += f"```{period_table.get_string()}```"
+
+    message.reply_text(periods_output,parse_mode='markdown')
 
 @Client.on_message(filters.command('today'))
 def list_today_timetable(bot, message: Message):
-    # Get today's name
     today = date.today().strftime('%A')
-    # Filter periods by day
-    periods = Period().where('weekday', today).get()
-    # Display the periods
+    periods = Period().today()
     period_table = format_periods(periods, today)
     message.reply_text(f"```{period_table.get_string()}```",parse_mode='markdown')
 
@@ -68,11 +57,9 @@ def format_periods(periods, weekday):
     period_table.align["Location"] = "l"
 
     for period in periods:
-        subject = Subject().where('id', period.subject_id).first()
-
         period_table.add_row([
             period.start_at + "\n" + period.end_at,
-            subject.name,
+            period.subject_name,
             period.location
         ])
 

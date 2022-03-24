@@ -1,29 +1,56 @@
-from models.model import Model
+from collections import defaultdict
+from datetime import date
+
+from database.DB import DB
 
 
-class Period(Model):
+class Period(DB):
     table_name = 'periods'
+    id = None
     start_at = None
     end_at = None
     weekday = None
     details = None
     subject_id = None
     location = None
+    subject_name = None
 
     def __init__(self):
         super().__init__()
 
     def all(self):
-        periods = self.table(self.table_name).fetch_all()
+        query = '''
+        SELECT 
+        periods.id, start_at, end_at, weekday, details, subject_id, location, subjects.name  
+        FROM periods
+        INNER JOIN subjects ON periods.subject_id = subjects.id
+        '''
+        self.cursor.execute(query)
+        periods = self.cursor.fetchall()
         return self.create_model_collection(periods)
 
-    def get(self):
-        periods = self.db_get()
+    def today(self):
+        today = date.today().strftime('%A')
+        return self.for_day(today)
+
+    def for_day(self, weekday):
+        query = '''
+        SELECT
+        periods.id, start_at, end_at, weekday, details, subject_id, location, subjects.name
+        FROM periods
+        INNER JOIN subjects ON periods.subject_id = subjects.id
+        WHERE weekday = :weekday
+        '''
+        self.cursor.execute(query, {'weekday': weekday})
+        periods = self.cursor.fetchall()
         return self.create_model_collection(periods)
 
-    def where(self, column, value):
-        self.table(self.table_name).db_where(column, value)
-        return self
+    @staticmethod
+    def sort_by_weekday(unsorted_periods):
+        sorted_periods = defaultdict(list)
+        for period in unsorted_periods:
+            sorted_periods[period.weekday].append(period)
+        return sorted_periods
 
     @staticmethod
     def create_model_collection(results):
@@ -36,5 +63,6 @@ class Period(Model):
             model.details = result[4]
             model.subject_id = result[5]
             model.location = result[6]
+            model.subject_name = result[7] if len(result) >= 7 else None
             collection.append(model)
         return collection

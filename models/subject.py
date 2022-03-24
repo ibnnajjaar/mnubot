@@ -1,8 +1,9 @@
-from models.model import Model
+from database.DB import DB
 
 
-class Subject(Model):
-    table_name = 'subjects'
+class Subject(DB):
+
+    id = None
     name = None
     code = None
     lecturer = None
@@ -11,21 +12,11 @@ class Subject(Model):
     def __init__(self):
         super().__init__()
 
-    def where(self, column, value):
-        self.table(self.table_name).db_where(column, value)
-        return self
-
     def all(self):
-        subjects = self.table(self.table_name).fetch_all()
+        query = '''SELECT * FROM subjects'''
+        self.cursor.execute(query)
+        subjects = self.cursor.fetchall()
         return self.create_model_collection(subjects)
-
-    def get(self):
-        subjects = self.db_get()
-        return self.create_model_collection(subjects)
-
-    def first(self):
-        subject = self.table(self.table_name).fetch_one()
-        return self.create_model(subject)
 
     def create_model_collection(self, results):
         collection = []
@@ -37,6 +28,7 @@ class Subject(Model):
     @staticmethod
     def create_model(data_array):
         model = Subject()
+        model.id = data_array[0]
         model.name = data_array[1]
         model.code = data_array[2]
         model.lecturer = data_array[3]
